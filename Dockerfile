@@ -1,14 +1,10 @@
 FROM ubuntu:24.04
 
-# Prevent interactive prompts
 ENV DEBIAN_FRONTEND=noninteractive
-
-# ⚠️ CHANGE THIS PASSWORD before building if security matters!
-ENV VNC_PASSWORD=12345
+ENV VNC_PASSWORD=changeme
 ENV VNC_RESOLUTION=1920x1080
 
-# Install all dependencies in ONE layer
-# 🔑 Critical: tigervnc-common provides the 'vncpasswd' command
+# Install dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     tigervnc-standalone-server \
     tigervnc-tools \
@@ -25,8 +21,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
-# Download AND install the Teneo .deb package
-# File goes to /tmp, gets installed, then deleted — nothing left behind
+# Download & install Teneo
 RUN wget -q https://github.com/TeneoProtocolAI/teneo-node-app-release-beta/releases/download/v0.4.4/Teneo.Beacon_0.4.4_amd64.deb \
     -O /tmp/teneo.deb && \
     apt-get update && \
@@ -34,16 +29,17 @@ RUN wget -q https://github.com/TeneoProtocolAI/teneo-node-app-release-beta/relea
     rm -f /tmp/teneo.deb && \
     rm -rf /var/lib/apt/lists/*
 
-# Set up VNC password file (vncpasswd now works because tigervnc-common is installed)
+# Setup VNC password, startup script, and CONFIG FILE
 RUN mkdir -p /root/.vnc && \
     echo "${VNC_PASSWORD}" | vncpasswd -f > /root/.vnc/passwd && \
-    chmod 600 /root/.vnc/passwd
-
-# Create VNC startup script for XFCE
-RUN printf '#!/bin/sh\nunset SESSION_MANAGER\nunset DBUS_SESSION_BUS_ADDRESS\nexec startxfce4\n' > /root/.vnc/xstartup && \
-    chmod +x /root/.vnc/xstartup
+    chmod 600 /root/.vnc/passwd && \
+    printf '#!/bin/sh\nunset SESSION_MANAGER\nunset DBUS_SESSION_BUS_ADDRESS\nexec startxfce4\n' > /root/.vnc/xstartup && \
+    chmod +x /root/.vnc/xstartup && \
+    echo "geometry=${VNC_RESOLUTION}" > /root/.vnc/config && \
+    echo "depth=24" >> /root/.vnc/config && \
+    echo "localhost=no" >> /root/.vnc/config
 
 EXPOSE 5901
 
-# Start VNC server and keep container alive
-CMD ["sh", "-c", "rm -f /tmp/.X1-lock /tmp/.X11-unix/X1; vncserver :1 -geometry ${VNC_RESOLUTION} -depth 24 -localhost no && tail -f /dev/null"]
+# Run vncserver in FOREGROUND mode (-fg). No tail needed.
+CMD ["sh", "-c", "rm -f /tmp/.X1-lock /tmp/.X11-unix/X1; vncserver :1 -fg"]
