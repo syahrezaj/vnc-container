@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     proxychains4 \
     micro \
     wget \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Download and install deb package
