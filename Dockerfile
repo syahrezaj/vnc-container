@@ -18,7 +18,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 ## Install other tools
 RUN apt-get install -y proxychains4 \
 micro \
-get
+wget
 
 # Download and install deb package
 RUN wget https://github.com/TeneoProtocolAI/teneo-node-app-release-beta/releases/download/v0.4.4/Teneo.Beacon_0.4.4_amd64.deb -O teneo.deb && \
