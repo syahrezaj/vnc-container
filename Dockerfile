@@ -21,7 +21,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # Download and install deb package
 RUN wget https://github.com/TeneoProtocolAI/teneo-node-app-release-beta/releases/download/v0.4.4/Teneo.Beacon_0.4.4_amd64.deb
-RUN apt install -y ./Teneo.Beacon_0.4.4_amd64.deb
 
 # Set up VNC password file
 RUN mkdir -p /root/.vnc && \
