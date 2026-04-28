@@ -4,7 +4,7 @@ FROM ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 # VNC configuration (CHANGE THE PASSWORD BEFORE BUILDING!)
-ENV VNC_PASSWORD=changeme
+ENV VNC_PASSWORD=12345
 ENV VNC_RESOLUTION=1920x1080
 
 # Install VNC server, XFCE desktop, and required dependencies
