@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     dbus-x11 \
     proxychains4 \
     micro \
-    wget
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
 # Download and install deb package
