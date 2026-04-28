@@ -4,14 +4,14 @@ FROM ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 # ⚠️ CHANGE THIS PASSWORD before building if security matters!
-ENV VNC_PASSWORD=changeme
+ENV VNC_PASSWORD=12345
 ENV VNC_RESOLUTION=1920x1080
 
 # Install all dependencies in ONE layer
 # 🔑 Critical: tigervnc-common provides the 'vncpasswd' command
 RUN apt-get update && apt-get install -y --no-install-recommends \
     tigervnc-standalone-server \
-    tigervnc-common \
+    tigervnc-tools \
     xfce4 \
     xfce4-goodies \
     dbus-x11 \
