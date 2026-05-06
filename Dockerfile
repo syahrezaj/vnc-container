@@ -3,7 +3,6 @@ FROM ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive
 ENV VNC_PASSWORD=12345
 ENV VNC_RESOLUTION=1920x1080
-ENV SSH_PASSWORD=12345
 
 # Install dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -12,13 +11,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xfce4 \
     xfce4-goodies \
     dbus-x11 \
-    openssh-server \
     proxychains4 \
     micro \
     wget \
     ca-certificates \
+    docker.io \
     software-properties-common \
-    supervisor \
     && add-apt-repository universe \
     && add-apt-repository multiverse \
     && apt-get update \
@@ -32,17 +30,7 @@ RUN wget -q https://github.com/TeneoProtocolAI/teneo-node-app-release-beta/relea
     rm -f /tmp/teneo.deb && \
     rm -rf /var/lib/apt/lists/*
 
-
-# 🔐 Configure SSH
-RUN mkdir -p /run/sshd /root/.ssh && \
-    ssh-keygen -A && \
-    echo "PermitRootLogin yes" >> /etc/ssh/sshd_config && \
-    echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config && \
-    echo "UsePAM no" >> /etc/ssh/sshd_config && \
-    echo "root:${SSH_PASSWORD}" | chpasswd && \
-    chmod 700 /root/.ssh
-
-# 🖥️ Setup VNC password, startup script, and config
+# Setup VNC password, startup script, and CONFIG FILE
 RUN mkdir -p /root/.vnc && \
     echo "${VNC_PASSWORD}" | vncpasswd -f > /root/.vnc/passwd && \
     chmod 600 /root/.vnc/passwd && \
@@ -51,12 +39,8 @@ RUN mkdir -p /root/.vnc && \
     echo "geometry=${VNC_RESOLUTION}" > /root/.vnc/config && \
     echo "depth=24" >> /root/.vnc/config && \
     echo "localhost=no" >> /root/.vnc/config
-    
-# 🔁 Supervisor config to run both VNC + SSH
-RUN mkdir -p /etc/supervisor/conf.d && \
-    printf '[supervisord]\nnodaemon=true\n\n[program:sshd]\ncommand=/usr/sbin/sshd -D\nautorestart=true\npriority=10\n\n[program:vnc]\ncommand=/bin/sh -c "rm -f /tmp/.X1-lock /tmp/.X11-unix/X1; vncserver :1 -fg"\nautorestart=true\npriority=20\nuser=root\n' > /etc/supervisor/conf.d/services.conf
 
-EXPOSE 22 5901
+EXPOSE 5901
 
-# ✅ Start both services via supervisor
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/services.conf"]
+# Run vncserver in FOREGROUND mode (-fg). No tail needed.
+CMD ["sh", "-c", "rm -f /tmp/.X1-lock /tmp/.X11-unix/X1; vncserver :1 -fg"]
