@@ -43,14 +43,8 @@ RUN mkdir -p /run/sshd /root/.ssh && \
     chmod 700 /root/.ssh
 
 # 🖥️ Setup VNC password, startup script, and config
-RUN mkdir -p /root/.vnc && \
-    echo "${VNC_PASSWORD}" | vncpasswd -f > /root/.vnc/passwd && \
-    chmod 600 /root/.vnc/passwd && \
-    printf '#!/bin/sh\nunset SESSION_MANAGER\nunset DBUS_SESSION_BUS_ADDRESS\nexec startxfce4\n' > /root/.vnc/xstartup && \
-    chmod +x /root/.vnc/xstartup && \
-    echo "geometry=${VNC_RESOLUTION}" > /root/.vnc/config && \
-    echo "depth=24" >> /root/.vnc/config && \
-    echo "localhost=no" >> /root/.vnc/config
+RUN mkdir -p /etc/supervisor/conf.d && \
+    printf '[supervisord]\nnodaemon=true\n\n[program:sshd]\ncommand=/usr/sbin/sshd -D\nautorestart=true\npriority=10\n\n[program:vnc]\ncommand=/bin/sh -c "rm -f /tmp/.X1-lock /tmp/.X11-unix/X1; vncserver :1 -fg"\nautorestart=true\npriority=20\nuser=root\n' > /etc/supervisor/conf.d/services.conf
 
 # 🔁 Supervisor config to run both VNC + SSH
 RUN mkdir -p /etc/supervisor/conf.d && \
