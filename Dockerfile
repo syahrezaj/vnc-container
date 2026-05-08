@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tint2 \
     autocutsel \
     pcmanfm \
-    xterm \
+    lxterminal \
     # GUI app runtime deps (GTK3/Qt5 basics)
     libgtk-3-0 \
     libqt5widgets5 \
