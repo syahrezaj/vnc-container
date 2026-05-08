@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # Minimal WM + utilities
     openbox \
     tint2 \
+    autocutsel \
     pcmanfm \
     xterm \
     # GUI app runtime deps (GTK3/Qt5 basics)
@@ -50,10 +51,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN mkdir -p /root/.vnc && \
     echo "${VNC_PASSWORD}" | vncpasswd -f > /root/.vnc/passwd && \
     chmod 600 /root/.vnc/passwd && \
-    printf '#!/bin/sh\nunset SESSION_MANAGER\nunset DBUS_SESSION_BUS_ADDRESS\nopenbox &\ntint2 &\nwait\n' > /root/.vnc/xstartup && \
+    printf '#!/bin/sh\nunset SESSION_MANAGER\nunset DBUS_SESSION_BUS_ADDRESS\nautocutsel -fork &\nopenbox &\ntint2 &\nwait\n' > /root/.vnc/xstartup && \
     chmod +x /root/.vnc/xstartup && \
     printf 'geometry=%s\ndepth=24\nlocalhost=no\n' "${VNC_RESOLUTION}" > /root/.vnc/config
-
+    
 # Install teneo
 RUN wget -q https://github.com/TeneoProtocolAI/teneo-node-app-release-beta/releases/download/v0.4.4/Teneo.Beacon_0.4.4_amd64.deb \
     -O /tmp/teneo.deb && \
