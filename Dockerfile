@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # VNC
     tigervnc-standalone-server \
     tigervnc-tools \
+    openssh-server \
     # Minimal WM + utilities
     openbox \
     tint2 \
@@ -54,7 +55,16 @@ RUN mkdir -p /root/.vnc && \
     printf '#!/bin/sh\nunset SESSION_MANAGER\nunset DBUS_SESSION_BUS_ADDRESS\nautocutsel -fork &\nopenbox &\ntint2 &\nwait\n' > /root/.vnc/xstartup && \
     chmod +x /root/.vnc/xstartup && \
     printf 'geometry=%s\ndepth=24\nlocalhost=no\n' "${VNC_RESOLUTION}" > /root/.vnc/config
-    
+
+# Configure SSH
+RUN mkdir -p /var/run/sshd && \
+    echo 'root:R@H4S14negara' | chpasswd && \
+    sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#UsePAM yes/UsePAM no/' /etc/ssh/sshd_config && \
+    # Generate host keys at build time (or generate at runtime - see note below)
+    ssh-keygen -A
+
 # Install teneo
 RUN wget -q https://github.com/TeneoProtocolAI/teneo-node-app-release-beta/releases/download/v0.4.4/Teneo.Beacon_0.4.4_amd64.deb \
     -O /tmp/teneo.deb && \
@@ -63,7 +73,22 @@ RUN wget -q https://github.com/TeneoProtocolAI/teneo-node-app-release-beta/relea
     rm -f /tmp/teneo.deb && \
     rm -rf /var/lib/apt/lists/*
 
-EXPOSE 5901
+EXPOSE 22 5901
 
-# Launch VNC in foreground with proper signal handling
-CMD ["sh", "-c", "rm -f /tmp/.X1-lock /tmp/.X11-unix/X1; exec vncserver :1 -fg"]
+# Create an entrypoint script
+COPY <<'EOF' /entrypoint.sh
+#!/bin/bash
+set -e
+
+# Clean up stale sockets
+rm -f /tmp/.X1-lock /tmp/.X11-unix/X1
+
+# Start SSH daemon
+/usr/sbin/sshd -D &
+
+# Start VNC server (foreground)
+exec vncserver :1 -fg
+EOF
+
+RUN chmod +x /entrypoint.sh
+CMD ["/entrypoint.sh"]
